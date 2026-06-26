@@ -615,6 +615,69 @@ class MessageParserTest {
         assertNull(result)
     }
 
+    // ── Seek support ─────────────────────────────────────────────────────────
+
+    @Test
+    fun `parse controller state with seek_max_ms`() {
+        val json = """
+            {
+              "type": "server/state",
+              "payload": {
+                "controller": {
+                  "supported_commands": ["seek", "seek_relative"],
+                  "seek_max_ms": 240000
+                }
+              }
+            }
+        """.trimIndent()
+        val msg = parser.parseText(json) as ServerState
+        assertEquals(240000L, msg.controller?.seekMaxMs)
+    }
+
+    @Test
+    fun `parse controller state without seek_max_ms defaults to null`() {
+        val json = """
+            {
+              "type": "server/state",
+              "payload": {
+                "controller": {
+                  "supported_commands": ["seek_relative"]
+                }
+              }
+            }
+        """.trimIndent()
+        val msg = parser.parseText(json) as ServerState
+        assertNull(msg.controller?.seekMaxMs)
+    }
+
+    @Test
+    fun `serialize seek command includes position_ms`() {
+        val moshi = Moshi.Builder().add(JsonOptionalAdapterFactory()).addLast(KotlinJsonAdapterFactory()).build()
+        val adapter = moshi.adapter(ClientCommand::class.java)
+        val msg = ClientCommand(
+            payload = ClientCommandPayload(
+                controller = ClientCommandControllerPayload(command = "seek", positionMs = 90000L)
+            )
+        )
+        val json = adapter.toJson(msg)
+        assertTrue(json.contains(""""command":"seek""""))
+        assertTrue(json.contains(""""position_ms":90000"""))
+    }
+
+    @Test
+    fun `serialize seek_relative command includes offset_ms`() {
+        val moshi = Moshi.Builder().add(JsonOptionalAdapterFactory()).addLast(KotlinJsonAdapterFactory()).build()
+        val adapter = moshi.adapter(ClientCommand::class.java)
+        val msg = ClientCommand(
+            payload = ClientCommandPayload(
+                controller = ClientCommandControllerPayload(command = "seek_relative", offsetMs = -10000L)
+            )
+        )
+        val json = adapter.toJson(msg)
+        assertTrue(json.contains(""""command":"seek_relative""""))
+        assertTrue(json.contains(""""offset_ms":-10000"""))
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun buildBinaryFrame(type: Byte, timestamp: Long, payload: ByteArray): ByteString {
