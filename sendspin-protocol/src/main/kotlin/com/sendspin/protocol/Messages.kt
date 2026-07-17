@@ -138,6 +138,8 @@ data class ClientCommandControllerPayload(
     @Json(name = "command") val command: String,
     @Json(name = "volume") val volume: Int? = null,
     @Json(name = "muted") val muted: Boolean? = null,
+    @Json(name = "position_ms") val positionMs: Long? = null,
+    @Json(name = "offset_ms") val offsetMs: Long? = null,
 )
 
 @JsonClass(generateAdapter = true)
@@ -203,6 +205,7 @@ data class ControllerState(
     @Json(name = "muted") val muted: Boolean? = null,
     @Json(name = "repeat") val repeat: JsonOptional<String> = JsonOptional.Absent,
     @Json(name = "shuffle") val shuffle: JsonOptional<Boolean> = JsonOptional.Absent,
+    @Json(name = "seek_max_ms") val seekMaxMs: Long? = null,
 )
 
 @JsonClass(generateAdapter = true)

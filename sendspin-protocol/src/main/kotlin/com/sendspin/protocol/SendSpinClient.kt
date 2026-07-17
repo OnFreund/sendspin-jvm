@@ -256,6 +256,38 @@ class SendSpinClient(
         else Timber.w("SendSpinClient: failed to queue client/command controller=%s", command)
     }
 
+    fun sendSeek(positionMs: Long) {
+        val socket = ws
+        if (socket == null) {
+            Timber.w("SendSpinClient: cannot send client/command seek; disconnected")
+            return
+        }
+        val msg = ClientCommand(
+            payload = ClientCommandPayload(
+                controller = ClientCommandControllerPayload(command = "seek", positionMs = positionMs)
+            )
+        )
+        val queued = socket.send(clientCommandAdapter.toJson(msg))
+        if (queued) Timber.d("SendSpinClient: >> client/command seek positionMs=%d", positionMs)
+        else Timber.w("SendSpinClient: failed to queue client/command seek")
+    }
+
+    fun sendSeekRelative(offsetMs: Long) {
+        val socket = ws
+        if (socket == null) {
+            Timber.w("SendSpinClient: cannot send client/command seek_relative; disconnected")
+            return
+        }
+        val msg = ClientCommand(
+            payload = ClientCommandPayload(
+                controller = ClientCommandControllerPayload(command = "seek_relative", offsetMs = offsetMs)
+            )
+        )
+        val queued = socket.send(clientCommandAdapter.toJson(msg))
+        if (queued) Timber.d("SendSpinClient: >> client/command seek_relative offsetMs=%d", offsetMs)
+        else Timber.w("SendSpinClient: failed to queue client/command seek_relative")
+    }
+
     fun disconnect(reason: String = "user_request") {
         activeOkHttpWs = null
         reconnectAttempt = Int.MAX_VALUE / 2
